@@ -1,0 +1,105 @@
+<?php
+/**
+ *@file
+ *Setup some of the main helper features to the suite
+ */
+
+ /**
+ * Implements hook_permission().
+ */
+function project_manager_permission() {
+  return array(
+    'project manager admin' => array(
+      'title' => t('Admin of PM Module'),
+     ),
+    'project manager user' => array(
+      'title' => t('User of PM Module'),
+    ),
+    'project manager add task' => array(
+      'title' => t('Can Add Tasks to PM'),
+    ),
+  );
+}
+
+/** HELPERS **/
+
+function pm_helpers_days($key =  NULL) {
+return array(
+    '1' => array(
+      'nice_name' => 'Monday',
+      'machine_name' => 'monday',
+    ),
+    '2' => array(
+      'nice_name' => 'Tuesday',
+      'machine_name' => 'tuesday',
+    ),
+    '3' => array(
+      'nice_name' => 'Wednesday',
+      'machine_name' => 'wednesday',
+    ),
+    '4' => array(
+      'nice_name' => 'Thursday',
+      'machine_name' => 'thursday',
+    ),
+     '5' => array(
+      'nice_name' => 'Friday',
+      'machine_name' => 'friday',
+    ),
+    '6' => array(
+      'nice_name' => 'Saturday',
+      'machine_name' => 'saturday',
+    ),
+     '7' => array(
+      'nice_name' => 'Sunday',
+      'machine_name' => 'sunday',
+    ),
+  );
+}
+
+function pm_helpers_return_days_machine_names(){
+	$days = pm_helpers_days();
+	foreach($days as $key => $value){
+		$machine[$key] = $value['machine_name'];
+	}
+	return $machine;
+}
+
+
+function pm_helpers_check_api() {
+  $app_id = $_REQUEST['app_id'];
+  $enc_request = $_REQUEST['enc_request'];
+  try {
+
+    $app_key_exists = pm_helpers_get_app_key_from_id($app_id);
+/*
+    if( !is_numeric($app_key_exists) ) {
+        throw new Exception('Application does not exist!');
+    }
+*/
+    //check if the request is valid by checking if it's an array and looking for the controller and action
+    $params = pm_helpers_decrypt($enc_request, $app_key_exists);
+    return $params;
+/*
+    if( $params == false ) {
+        throw new Exception('Request is not valid');
+    }
+*/
+    
+    
+  } catch( Exception $e ) {
+          //catch any exceptions and report the problem
+          $result = array();
+          $result['success'] = false;
+          $result['errormsg'] = $e->getMessage();
+  }
+ 
+}
+
+function pm_helpers_get_app_key_from_id($app_id) {
+  return db_query("SELECT app_key FROM project_manager_app_id WHERE 
+                    app_id = :id", array(':id' => $app_id))->fetchField();
+}
+
+function pm_helpers_decrypt($enc_request, $app_key) {
+  return json_decode(trim(mcrypt_decrypt( MCRYPT_RIJNDAEL_256, $app_key, base64_decode($enc_request), MCRYPT_MODE_ECB )));
+}

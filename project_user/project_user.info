@@ -1,0 +1,6 @@
+name = User Project Fields
+description = User Project Fields
+package = Project Manager
+core = 7.x
+
+dependency = project_manager;
